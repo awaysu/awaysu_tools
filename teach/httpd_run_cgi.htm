@@ -1,0 +1,62 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=big5">
+<title>1</title>
+</head>
+
+<body>
+
+<p style="font-family: Arial; margin-top: 0pt; margin-bottom: 0pt">
+<span style="font-weight: bold">1. Enable Busybox httpd</span><br>
+Networking Utilities=&gt;[*] httpd<br>
+<br>
+<span style="font-weight: bold">2.mkdir /www /www/cgi-bin</span><br>
+<br>
+<span style="font-weight: bold">3.touch /etc/httpd.conf</span><br>
+<br>
+<span style="font-weight: bold">4.run httpd =&gt; httpd -h /www/ -c /etc/httpd.conf</span><br>
+<br>
+<span style="font-weight: bold">5.CGI程式:有二種方式,一個是用shell script,另一種是用c語言</span><br>
+<span style="font-weight: bold">5.1 shell script</span><br>
+存到/www/cgi-bin/cgi-test1<br>
+&nbsp;</p>
+<table style="font-family: Arial" id="table3" border="1" cellpadding="0" cellspacing="0" width="60%">
+	<tr>
+		<td>
+		<p style="margin-top: 0; margin-bottom: 0">#!/bin/sh<br>
+		echo &quot;Content-type: text/html&quot;<br>
+		echo &quot;&quot;<br>
+		echo &quot;&lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;test&lt;/TITLE&gt;&lt;/HEAD&gt;&quot;<br>
+		echo &quot;&lt;BODY&gt;&quot;<br>
+		echo &quot;&lt;pre&gt;&quot;<br>
+		ls<br>
+		echo &quot;&quot;<br>
+		echo &quot;&lt;/pre&gt;&quot;<br>
+		echo &quot;&lt;/BODY&gt;&lt;/HTML&gt;&quot;</td>
+	</tr>
+</table>
+<p style="font-family: Arial; margin-top: 0pt; margin-bottom: 0pt"><br>
+<br>
+<span style="font-weight: bold">5.2 c language</span><br>
+<br>
+&nbsp;</p>
+<table style="font-family: Arial" id="table4" border="1" cellpadding="0" cellspacing="0" width="60%">
+	<tr>
+		<td>
+		<p style="margin-top: 0; margin-bottom: 0">#include &lt;stdio.h&gt;<br>
+		main() <br>
+		{<br>
+		printf(&quot;Content-type:text/html\n\n&quot;);<br>
+		printf(&quot;Hello,World!&quot;);<br>
+		} </td>
+	</tr>
+</table>
+<p style="font-family: Arial; margin-top: 0pt; margin-bottom: 0pt"><br>
+build成執行檔後將執行檔copy至/www/cgi-bin/cgi-test2<br>
+<br>
+<span style="font-weight: bold">6.用瀏覽器執行該二個cgi即可</span></p>
+
+</body>
+
+</html>

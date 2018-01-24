@@ -1,0 +1,12 @@
+1	RAM		memtester
+2	NOR Flash	arc_flashTest.sh
+3	NAND Flash	arc_flashTest.sh
+4	USB Port	arc_deviceTest.sh
+5	LED		gpio_helper_standalone
+6	Push button	gpio_helper_standalone
+7	IR		atlas
+8	Play streaming/HDMI	atlas
+9	WIFI		Netapp
+10	Ethernet/WIFI performance	iperf
+11	Short boot/Long boot test	
+

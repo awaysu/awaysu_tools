@@ -1,0 +1,55 @@
+1.預讀圖片
+var arraryKeyImg = new Array("img/kb_bq.jpg", "img/kb_bw.jpg", "img/kb_be.jpg");
+var loadImg = new Array();
+for (i = 0; i != arraryKeyImg.length; i++)
+{
+    loadImg[i] = new Image();
+    loadImg[i].src = arraryKeyImg[i];
+}
+
+2.利用陣列去中控制
+var arraryKeyImgID = new Array("key_00", "key_01", "key_02");
+for (i = 0; i != 10; i++)
+{
+    document.getElementById(arraryKeyImgID[i]).style.top= 100;    
+}
+
+<img border="0" src="img/kb_bq.jpg" id="key_00" style="position:absolute">
+<img border="0" src="img/kb_bw.jpg" id="key_01" style="position:absolute">
+<img border="0" src="img/kb_be.jpg" id="key_02" style="position:absolute">
+
+
+3.和php一樣抓取參數
+function getValue(sArgName) {
+    var sHref = window.location.href;
+    var args = sHref.split("?");
+    var retval = "";
+
+    if (args[0] == sHref) {
+        return retval;
+    }
+    var str = args[1];
+    args = str.split("&");
+    for (var i = 0; i < args.length; i++) {
+        str = args[i];
+        var arg = str.split("=");
+        if (arg.length <= 1) continue;
+        if (arg[0] == sArgName) retval = arg[1];
+    }
+    return retval;
+}
+
+4.設置timer
+setTimeout("move();", 1000);
+
+5.讀取網頁時做初始
+<body onLoad = "initialize()">
+
+6.動態產生
+ShowText1.innerHTML = "<center>";
+<div id="ShowText1" style="color: #ffffff; font-size: 16pt; margin-top: 0; margin-bottom: 0">
+
+7.table不稱開
+<table style="word-break:break-all>
+
+

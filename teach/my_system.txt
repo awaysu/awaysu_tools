@@ -1,0 +1,7 @@
+1.code先define好所有參數length, 常用32,100,256,1024
+2.將常用的function全部寫成一個library,包含source code的function,以後有問題只需更改該library,而且不會一堆library顯得雜亂.
+3.TRUE/FALSE change CT_TRUE/CTFALSE,因為和source code合併時有define不同會造成出錯的可能性!
+4.全部的設定檔可以建在一個目錄下,可參考Windows registry方式用tree的架構,整個結構可以寫在library的include檔裡,再用二個function專門做讀取.在linux中有var的目錄,開機時可先把全部config拷貝到此,讀取時讀取var目錄的,寫的時候在寫實際的.讀取var目錄的原因是var是存在memory,速度比較快,而實際config通常存在flash上,速度較慢(些erase, write).
+5.linux 通常用partition來放置config,建議分常更改不常更改,這樣config會有二個partition.
+6.開機速度,有些程式會影響,可以用一個flag去enable/disable, disable顯示出最快速開機速度,demo會比較好看!!
+

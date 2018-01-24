@@ -1,0 +1,953 @@
+#====================================================================
+#UBIFS filesystem 
+1.1 手動mount測試:
+flash_eraseall /dev/mtd11
+ubiattach /dev/ubi_ctrl -m 11
+ubimkvol /dev/ubi0 -N rootfs -s 28MiB
+ubimkvol /dev/ubi0 -N rootfs -m
+mount -t ubifs ubi0_0 /tmp
+
+1.2
+umount
+umount /tmp
+ubidetach -p /dev/mtd11
+
+2.1 製做image
+建立ubinize.cfg
+[ubifs]
+mode=ubi
+image=ubifs.img
+vol_id=0
+vol_size=28MiB
+vol_type=dynamic
+vol_name=rootfs
+vol_flags=autoresize
+mkfs.ubifs -r {folder} -m 2048 -e 126976 -c 128 -o ubifs.img
+ubinize -o ubi.img -m 2048 -p 128KiB -s 2048 ubinize.cfg
+
+2.2燒入到flash
+ubiformat /dev/mtd9 -s 2048 -f ubi.img
+
+2.3測試是否寫成功
+ubiattach /dev/ubi_ctrl -m 9
+mount -t ubifs ubi0_0 /tmp
+
+4.開機command
+ifconfig eth0 -auto;flash -noheader 192.168.1.254:jason/7231_1.0_kernel
+flash0.kernel
+boot -z -elf flash0.kernel: 'ubi.mtd=9 rootfstype=ubifs root=ubi0:rootfs wr
+ip=off bmem=192M@64M'
+
+5./dev
+mknod ubi0_0 c 254 1
+mknod ubi0_1 c 254 2
+mknod ubi0_2 c 254 3
+mknod ubi1_0 c 253 1
+mknod ubi1_1 c 253 2
+mknod ubi1_2 c 253 3
+mknod ubi2_0 c 252 1
+mknod ubi2_1 c 252 2
+mknod ubi2_2 c 252 3
+
+#====================================================================
+#讓不同linux kernel路徑的nexus也可以執行的指令
+由 jason 在 三, 08/22/2012 - 13:25 發表
+
+command:
+mipsel-linux-objcopy --remove-section __versions bcmdriver.ko
+司
+
+#====================================================================
+#set ifconfig by myself
+ifconfig eth0 192.168.2.101 netmask 255.255.255.0
+route add default gw 192.168.2.254
+
+
+#====================================================================
+#How to know what library to link
+# mipsel-linux-readelf -d wget
+
+Dynamic section at offset 0x180 contains 31 entries:
+  Tag        Type                         Name/Value
+ 0x00000001 (NEEDED)                     Shared library: [libdl.so.0]
+ 0x00000001 (NEEDED)                     Shared library: [libgcc_s.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.0] 
+ 
+ 
+#====================================================================
+#use ffmpeg to make multiview video
+./ffmpeg -i "./DTV2.ts" -i "./DTV3.ts" -i "./DTV4.ts" -i "./DTV5.ts" -vcodec mpeg2video -aspect 4:3 -s 352x288 -r 25.000 -vb 800000 -acodec mp2 -ab 128000 -ar 48000 -ac 2 -y "./out_clip.ts" -map 0:0 -map 0:1 -newvideo -map 1:0 -newvideo -map 2:0  -newvideo -map 3:0
+
+
+#====================================================================
+#squashfs filesystem
+
+1.make SQUASHFS image
+mksquashfs {folder} {image name} -b 65536 -info -noappend -all-root
+
+2.mount
+mount -t squashfs  /dev/mtdblock10 /mnt/tmp2
+or
+mount -t squashfs -o loop {image name} /mnt/tmp2
+
+3.boot command
+boot -z -elf nandflash0.initrd0: 'rootfstype=squashfs root=/dev/mtdblock10 ro ip=off mem=64M
+
+4.壓縮率
+app image source :79M
+ubifs: 54M
+squashfs: 40M
+
+5.SQUASHFS as rootfs
+boot -z -elf nandflash0.initrd0: 'ubi.mtd=rootfs root=/dev/mtdblock10 ro ip=off mem=64M
+
+
+#====================================================================
+#make image
+mkdir initrd
+dd if=/dev/zero of=initrd.img bs=1k count=8192
+mke2fs -F -v -m0 initrd.img
+mount -o loop initrd.img initrd 
+
+
+#====================================================================
+#kernel 進filesystem掛載driver
+以stat硬碟為例
+1.到kernel run makemenuconfig
+Device Drivers =>
+Serial ATA (prod) and Parallel ATA (experimental) drivers =>
+ <M> ATA device support                                     
+ < >   Force spinup device                                  
+ < >   AHCI SATA support                                    
+ <M>   ServerWorks Frodo / Apple K2 SATA support            
+ [ ]     Support for Native Command Queueing (EXPERIMENTAL) 
+ (2)     Broadcom SATA host controller port number: 1 or 2       
+
+
+2.
+make
+make modules
+make modules_install INSTALL_MOD_PATH=./_install
+
+
+3.將_install裡的檔案拷貝到filesystem
+
+
+4.到 busybox run makemenuconfig
+ Linux Module Utilities  =>
+[ ] Simplified modutils    
+[*]   insmod               
+[*]   rmmod                
+[*]   lsmod                
+[*]     Pretty output      
+[*]   modprobe             
+[*]     Blacklist support  
+[*]   depmod 
+會多modprobe & depmod
+
+
+5.modprobe sata_svw
+
+
+6. 看到sata_svw 掛載成功
+# lsmod
+Module                  Size  Used by    Not tainted
+sata_svw               17104  0
+
+
+#====================================================================
+# 小而巧的sshd serviver
+本來都是用openssh
+不過檔案滿大的
+後來發現原來有這個小而巧的sshd serviver
+
+1.下載:
+http://matt.ucc.asn.au/dropbear/dropbear.html
+2.參考[Linux] 移植openssh(ssh server)到MIPS板子上並免密碼 build zlib和openssl
+
+3.解壓縮dropbear,並run it:
+CC=mipsel-linux-gcc CXX=mipsel-linux-g++ LD=mipsel-linux-gcc AR=mipsel-linux-ar AS=mipsel-linux-as RANLIB=mipsel-linux-ranlib NM=mipsel-linux-nm STRIP=mipsel-linux-strip CFLAGS="-mabi=32 -DL_ENDIAN -DTERMIO -O3 -g -Wall" host_os=linux-gnu host=mipsel-mips-linux-gnu ./configure --target=mipsel-unknown-linux-gnu --host=mipsel-unknown-linux-gnu --build=i686-pc-linux-gnu --prefix= --with-zlib={zlib的include path}
+
+4.build:
+make
+
+5.copy dropbear & dropbearkey to 板子,並run
+dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+否則會出現
+[194] Feb 24 19:58:34 Failed reading '/etc/dropbear/dropbear_rsa_host_key', disabling RSA
+[194] Feb 24 19:58:34 Failed reading '/etc/dropbear/dropbear_dss_host_key', disabling DSS
+[194] Feb 24 19:58:34 premature exit: No hostkeys available
+
+6.run dropbear 
+
+#====================================================================
+# How to know broadcast address?
+其實broadcast address是
+~Mask | ip address
+可用command算出
+ipcalc -b 10.118.20.115 255.255.252.0
+
+
+#====================================================================
+# build image command
+yaffs2 format:
+mkyaffs2image ${compress_image_path} ${put_image_path}/${file_name}
+
+cramfs format:
+mkfs.cramfs -v -n "Cramfs" ${compress_image_path} ${put_image_path}/${file_name}
+
+jffs2 format:
+mkfs.jffs2 -n -o ${put_image_path}/${file_name} --squash --verbose --little-endian --eraseblock=0x10000 --pagesize=2048 -d ${compress_image_path}
+
+
+#====================================================================
+# DHCP client
+/etc/udhcpc-script
+
+#!/bin/sh
+# udhcpc script edited by Tim Riker <Tim@Rikers.org>
+[ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
+RESOLV_CONF="/etc/resolv.conf"
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+case "$1" in
+deconfig)
+/sbin/ifconfig $interface 0.0.0.0
+;;
+renew|bound)
+/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+if [ -n "$router" ] ; then
+echo "deleting routers"
+while route del default gw 0.0.0.0 dev $interface ; do
+:
+done
+for i in $router ; do
+route add default gw $i dev $interface
+done
+fi
+echo -n > $RESOLV_CONF
+[ -n "$domain" ] && echo search $domain >> $RESOLV_CONF
+for i in $dns ; do
+echo adding dns $i
+echo nameserver $i >> $RESOLV_CONF
+done
+;;
+esac
+exit 0
+
+ 
+
+/etc/resolv.conf
+
+nameserver 168.95.1.1
+
+ 
+
+開機時執行:
+/sbin/ifconfig lo 127.0.0.1 up
+/sbin/udhcpc -i eth0 -s /etc/udhcpc-script
+
+參考:
+http://sites.google.com/site/koukailinuxdev/build-usb-linux/create_initrd
+
+#====================================================================
+# realtime modify linux mac
+
+ifconfig eth0 down
+ip link set dev eth0 address xx:xx:xx:xx:xx:xx
+ifconfig eth0 up
+
+#====================================================================
+# ask when you delete
+fedora 12的版本刪除檔案不會詢問
+/etc/csh.cshrc加入
+alias rm '/bin/rm -i'
+
+
+#====================================================================
+# connect wifi
+su
+insmod /system/vendor/lib/modules/usbfwdnld.ko
+insmod /system/vendor/lib/modules/usb97mlan.ko
+insmod /system/vendor/lib/modules/usb8797.ko cfg80211_wext=0xf sta_name=wlan wfd_name=p2p max_vir_bss=1 drv_mode=5
+start p2p_supplicant
+/system/bin/dhcpcd wlan0 &
+
+open:
+wpa_cli -i wlan0 remove_network 0
+wpa_cli -i wlan0 add_network 0
+wpa_cli -i wlan0 set_network 0 ssid '"E4200"'
+wpa_cli -i wlan0 set_network 0 key_mgmt NONE
+wpa_cli -i wlan0 enable_network 0
+wpa_cli -i wlan0 select_network 0
+wpa_cli -i wlan0 status
+
+wep:
+wpa_cli -i wlan0 remove_network 0
+wpa_cli -i wlan0 add_network 0
+wpa_cli -i wlan0 set_network 0 ssid '"awayhtc"'
+wpa_cli -i wlan0 set_network 0 key_mgmt NONE
+wpa_cli -iwlan0 set_network 0 wep_key0 '"1111111111111"'
+wpa_cli -i wlan0 enable_network 0
+wpa_cli -i wlan0 select_network 0
+wpa_cli -i wlan0 status
+
+wpa:
+wpa_cli -i wlan0 remove_network 0
+wpa_cli -i wlan0 add_network 0
+wpa_cli -i wlan0 set_network 0 ssid '"awayhtc"'
+wpa_cli -i wlan0 set_network 0 key_mgmt WPA-PSK
+wpa_cli -i wlan0 set_network 0 proto WPA
+wpa_cli -i wlan0 set_network 0 pairwise TKIP
+wpa_cli -i wlan0 set_network 0 group TKIP
+wpa_cli -i wlan0 set_network 0 psk '"11111111"'
+wpa_cli -i wlan0 enable_network 0
+wpa_cli -i wlan0 select_network 0
+wpa_cli -i wlan0 status
+
+wpa2:
+wpa_cli -i wlan0 remove_network 0
+wpa_cli -i wlan0 add_network 0
+wpa_cli -i wlan0 set_network 0 ssid '"awayhtc"'
+wpa_cli -i wlan0 set_network 0 key_mgmt WPA-PSK
+wpa_cli -i wlan0 set_network 0 proto WPA2
+wpa_cli -i wlan0 set_network 0 pairwise CCMP
+wpa_cli -i wlan0 set_network 0 group CCMP
+wpa_cli -i wlan0 set_network 0 psk '"11111111"'
+wpa_cli -i wlan0 enable_network 0
+wpa_cli -i wlan0 select_network 0
+wpa_cli -i wlan0 status
+
+disconnect:
+wpa_cli -i wlan0 disable_network 0
+wpa_cli -i wlan0 remove_network 0 (刪除AP資訊)
+wpa_cli -i wlan0 disconnect (斷線)
+
+ping google:
+ping 173.194.72.104
+
+rmmod usb8797
+rmmod usb97mlan
+
+
+#====================================================================
+# porting NTFS-3G
+About NTFS-3G:
+http://zh.wikipedia.org/zh-hk/NTFS-3G
+
+Download page:
+http://www.tuxera.com/community/ntfs-3g-download/
+
+Download:
+http://tuxera.com/opensource/ntfs-3g-2010.3.6.tgz
+
+kernel:
+File systems  --->  
+<*> Filesystem in Userspace support
+
+make:
+1. tar zxvf ntfs-3g-2010.3.6.tgz
+2. cd ntfs-3g-2010.3.6
+3. 產生Makefile
+CC=mipsel-linux-gcc CXX=mipsel-linux-g++ LD=mipsel-linux-ld AR=mipsel-linux-ar AS=mipsel-linux-as RANLIB=mipsel-linux-ranlib NM=mipsel-linux-nm STRIP=mipsel-linux-strip CFLAGS="-mabi=32 -DL_ENDIAN -DTERMIO -O3 -g -Wall" host_os=linux-gnu host=mipsel-mips-linux-gnu ./configure --target=mipsel-unknown-linux-gnu --host=mipsel-unknown-linux-gnu --build=i686-pc-linux-gnu --prefix=
+
+4.modify file ./include/ntfs-3g/ntfstime.h
+#if !defined __timespec_defined &&            \
+    ((defined _TIME_H &&               \
+      (defined __USE_POSIX199309 || defined __USE_MISC)) ||   \
+      defined __need_timespec)
+# define __timespec_defined   1
+
+# include    /* This defines __time_t for us.  */
+
+/* POSIX.1b structure for a time value.  This is like a `struct timeval' but
+   has nanoseconds instead of microseconds.  */
+struct timespec
+  {
+    __time_t tv_sec;      /* Seconds.  */
+    long int tv_nsec;      /* Nanoseconds.  */
+  };
+
+#endif /* timespec not defined and or need timespec.  */
+
+5.modify file ./src/ntfs-3g.c
+//      #error "No known timespec member in struct stat!"
+        /* No known timespec member in struct stat */
+        struct timespec ts;
+        ts = ntfs2timespec(ni->last_access_time);
+        stbuf->st_atime = ts.tv_sec;
+        //stbuf->st_atimensec = ts.tv_nsec;
+        ts = ntfs2timespec(ni->last_mft_change_time);
+        stbuf->st_ctime = ts.tv_sec;
+        //stbuf->st_ctimensec = ts.tv_nsec;
+        ts = ntfs2timespec(ni->last_data_change_time);
+        stbuf->st_mtime = ts.tv_sec;
+        //stbuf->st_mtimensec = ts.tv_nsec;
+#endif
+
+
+4. make
+5. app產生在src/.libs/
+   library產生libntfs-3g/.libs
+
+command:
+   ./ntfs-3g /dev/sda1 /mnt/
+
+
+refer:
+http://portable.easylife.tw/802
+http://samlin35.blogspot.com/2009/07/linux-ntfs.html
+http://blog.xuite.net/michaelr/linux/10413757
+http://www.tuxera.com/forum/viewtopic.php?f=3&t=5577
+
+#====================================================================
+# 新人準備
+
+1: Linux -- In charge Justin
+1.1  Install
+1.2  Command use, example: cp, rm …..
+1.3  Shell Script
+1.4  Knowledge
+1.4.1       What is Linux
+1.4.2       Boot start -- runlevel
+1.4.3       Distribution version
+1.5  Server setup, telnet, ssh, tftp, SAMBA, http, NFS
+    Reference page: http://linux.vbird.org/
+
+2: Linux Embedded System – In charge Jason
+    2.1 Knowledge
+          Cross compiler, boot loader, boot procedure
+    2.2 Kernel, file system, busy box
+    Reference page: Jason attached file
+http://www.wretch.cc/blog/awaysu/23556127
+http://www.wretch.cc/blog/awaysu/24756547
+
+
+3: STB7007 – In charge Jason
+    3.1 CFE using
+    3.2 MTD partition
+    3.3 Load kernel and file system
+    3.4 Play movie
+
+
+4: Linux Programming – In charge Chih-Huang
+     4.1 Makefile
+     4.2 Basic function
+     Reference page: http://www.cs.nctu.edu.tw/~yslin/library/linuxc/main.htm
+                                   http://172.16.33.208:8080/ceweb/?q=node/160
+http://www.wretch.cc/blog/awaysu/23755305
+http://www.gnu.org/software/make/manual/make.html#Top
+
+ 
+5: Build file system – In charge Jason
+
+#====================================================================
+# How to add ntp client to schedule
+
+make a script and run when boot start:
+echo "root" > /var/spool/cron/crontabs/cron.update
+echo "*/5 * * * * /usr/sbin/ntpdate -f 28800 -u -s time.stdtime.gov.tw &" > /var/spool/cron/crontabs/root
+crond
+
+/var/spool/cron/crontabs/root format:
+echo "*/{minute} * * * * {action} &"
+
+
+#====================================================================
+# 測試usb disk讀取速度
+
+# hdparm -Tt /dev/sda
+
+/dev/sda:
+ Timing cached reads:   530 MB in  2.00 seconds = 264.51 MB/sec
+ Timing buffered disk reads:   26 MB in  3.06 seconds =   8.51 MB/sec
+ 
+#====================================================================
+# 移植nfs server 到MIPS板子
+
+按照鳥哥的說法,使用nfs server需要以下二個主程式
+NFS 主程式：nfs-utils
+RPC 主程式：portmap
+但是我下載自行make後,發現需要超多的lib,而且configure都無法產生Makefile
+所以我改用移植到cygwin的程式
+http://ftp.ntu.edu.tw/cygwin/release-2/nfs-server/nfs-server-2.3-5-src.tar.bz2
+
+1.參考http://mkl-note.blogspot.com/2008/09/error-while-running-configure-cannot.html
+在configure中將下列檢查的項目做更改
+ac_cv_sizeof_unsigned_long
+ac_cv_sizeof_unsigned_short
+ac_cv_sizeof_unsigned_int
+ac_cv_sizeof_uid_t
+ac_cv_sizeof_gid_t
+ac_cv_sizeof_ino_t
+ac_cv_sizeof_dev_t
+nfsd_cv_broken_setfsuid
+nfsd_cv_func_statfs
+nfsd_cv_bsd_signals
+
+#  { { echo "$as_me:$LINENO: error: cannot run test program while cross compiling
+#See \`config.log' for more details." >&5
+#echo "$as_me: error: cannot run test program while cross compiling
+#See \`config.log' for more details." >&2;}
+#   { (exit 1); exit 1; }; }
+  { echo "$as_me:$LINENO: glibc <= 2.3.2 check skipped" >&5
+echo "$as_me: glibc <= 2.3.2 check skipped" >&2;}
+
+2.註解
+include/system.h
+//#include <arpa/nameserv.h>
+
+3.在libnfs/logging.c加入
+struct tm {
+int tm_sec;
+int tm_min;
+int tm_hour;
+int tm_mday;
+int tm_mon;
+int tm_year;
+int tm_wday;
+int tm_yday;
+int tm_isdst;
+};
+
+4.nfsd/fsusage.c註解裡面的code
+#if !defined(STAT_STATFS2_FS_DATA) && !defined(STAT_READ)
+
+5.備份xdr/mount.h並修改
+刪除全部#if defined(__STDC__) || defined(__cplusplus)的宣告
+留下else的
+(因為找不到哪裡有去定義__STDC__和__cplusplus)
+
+6.下command產生Makefile
+CC=mipsel-linux-gcc CXX=mipsel-linux-g++ LD=mipsel-linux-ld AR=mipsel-linux-ar AS=mipsel-linux-as RANLIB=mipsel-linux-ranlib NM=mipsel-linux-nm STRIP=mipsel-linux-strip CFLAGS="-mabi=32 -DL_ENDIAN -DTERMIO -O3 -g -Wall" host_os=linux-gnu host=mipsel-mips-linux-gnu ./configure --target=mipsel-unknown-linux-gnu --host=mipsel-unknown-linux-gnu --build=i686-pc-linux-gnu --prefix= ac_cv_sizeof_unsigned_long=4 ac_cv_sizeof_unsigned_short=2 ac_cv_sizeof_unsigned_int=4 ac_cv_sizeof_uid_t=4 ac_cv_sizeof_gid_t=4 ac_cv_sizeof_ino_t=4 ac_cv_sizeof_dev_t=4 nfsd_cv_broken_setfsuid=yes nfsd_cv_func_statfs=yes nfsd_cv_bsd_signals=yes
+
+7.置換修改過的mount.h(第5項)
+
+8.make
+
+9.編譯完後所需執行檔案:
+(a) ugidd/rpc.ugidd
+(b) nfsd/rpc.nfsd
+(c) mountd/rpc.mountd
+(d) util/showmount
+(e) 自行加入/etc/exports 設定更安全的權限(參考鳥哥)
+
+10.執行rpc.ugidd、rpc.nfsd和rpc.mountd
+
+p.s. 1 client端check server端的nfs指令
+
+showmount -e {server ip}
+
+p.s. 2 如果出現mount to NFS server '{server ip}' failed: server is down.
+
+mount加入版本參數
+
+mount -t nfs {server ip}:/{folder} /mnt/ -o nfsvers=2
+
+p.s. 3 如果mount失敗,請在/etc/hosts裡加入client端的IP和host name
+
+格式:{IP}    {host name}    {host name}
+
+#====================================================================
+# 移植openssh(ssh server)到MIPS板子上並免密碼
+
+1.下載
+openssh
+http://www.openssh.org/portable.html
+
+openssl
+http://www.openssl.org/source/
+
+zlib
+http://www.zlib.net/
+
+
+2.解壓縮openssl, openssh和zlib
+修改openssl的Makefile, cc改成mipsel-linux-gcc,然後make
+
+3.到 openssh執行下列產生Makefile
+CC=mipsel-linux-gcc CXX=mipsel-linux-g++ LD=mipsel-linux-gcc AR=mipsel-linux-ar AS=mipsel-linux-as RANLIB=mipsel-linux-ranlib NM=mipsel-linux-nm STRIP=mipsel-linux-strip CFLAGS="-mabi=32 -DL_ENDIAN -DTERMIO -O3 -g -Wall" host_os=linux-gnu host=mipsel-mips-linux-gnu ./configure --target=mipsel-unknown-linux-gnu --host=mipsel-unknown-linux-gnu --build=i686-pc-linux-gnu --prefix=
+1.注意LD=mipsel-linux-gcc不是mipsel-linux-ld,否則會出現Undefined reference to __fixunsdfdi and __umoddi3
+2.出現
+checking zlib.h presence... no
+checking for zlib.h... no
+configure: error: *** zlib.h missing - please install first or check config.log ***
+請在後面加上--with-zlib={zlib的include path}
+3.出現
+checking openssl/opensslv.h usability... no
+checking openssl/opensslv.h presence... no
+checking for openssl/opensslv.h... no
+configure: error: *** OpenSSL headers missing - please install first or check config.log ***
+請'將openssl做make install  (需用mipsel-linux-gcc)
+
+4.修改Makefile
+(A)DESTDIR=/home/awaysu/openssh/source/openssh-5.2p1/_install
+(否則會覆蓋到系統本身的sshd)
+
+(B)
+修改LDFLAGS=-L. -Lopenbsd-compat/ -L/usr/local/ssl/lib
+LDFLAGS=-L. -Lopenbsd-compat/ -L(剛剛make好ssl的路徑,主要是要link他的library)
+
+(C)
+install: $(CONFIGFILES) ssh_prng_cmds.out $(MANPAGES) $(TARGETS) install-files install-sysconf host-key check-config
+改成
+install: $(CONFIGFILES) ssh_prng_cmds.out $(MANPAGES) $(TARGETS) install-files install-sysconf host-key
+(check-config會去執行sshd,因已經是mips的執行檔,最後會執行失敗)
+
+5.make & make install
+所有的檔案會產生至/home/awaysu/openssh/source/openssh-5.2p1/_install
+
+6.zlib
+(A)執行下列產生Makefile
+CC=mipsel-linux-gcc CXX=mipsel-linux-g++ ./configure --prefix=/usr --shared --libdir=/lib
+
+(B)make會產生libz.so, libz.so.1, libz.so.1.2.3三個檔,把這三個檔拷貝至板子上,注意有二個是link file
+(沒有這個library 會出現/sbin/sshd: can't load library 'libz.so.1'的錯誤)
+
+7.版子上/etc/passwd加入以下
+sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin
+(否則會出現 Privilege separation user sshd does not exist)
+
+8.產生rsa金鑰檔案,在板子上執行
+ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):(Enter)
+Created directory '/root/.ssh'.(Enter)
+Enter passphrase (empty for no passphrase):(Enter)
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+75:ab:2f:43:09:25:2c:6d:66:df:c1:d0:53:57:ee:bc root@localhost
+The key's randomart image is:
++--[ RSA 2048]----+
+|       o  .+ .. +|
+|      . B . =  o |
+|       = +...o  .|
+|        ...... o |
+|        S. ..   o|
+|          o.    .|
+|         ..    E |
+|          o.     |
+|           o.    |
++-----------------+
+
+9.產生dsa金鑰檔案,在板子上執行
+ssh-keygen -t dsa
+Generating public/private dsa key pair.
+Enter file in which to save the key (/root/.ssh/id_dsa):(Enter)
+Enter passphrase (empty for no passphrase):(Enter)
+Enter same passphrase again:(Enter)
+Your identification has been saved in /root/.ssh/id_dsa.
+Your public key has been saved in /root/.ssh/id_dsa.pub.
+The key fingerprint is:
+f7:2b:24:32:3e:71:35:17:28:a7:93:0a:40:6b:1a:42 root@localhost
+The key's randomart image is:
++--[ DSA 1024]----+
+| E.        .     |
+|. ..    . o .    |
+|o o.     =   .   |
+|.+  .   + o .    |
+|.    . .So.o     |
+|      = o...     |
+|     . = o  .    |
+|      o   .  .   |
+|       .   ..    |
++-----------------+
+
+10.金鑰檔會在/root/.ssh下,請拷貝至/etc
+cp /root/.ssh/id_rsa /etc/ssh_host_rsa_key
+cp /root/.ssh/id_dsa /etc/ssh_host_dsa_key
+(如果沒有金鑰檔會產生下列錯誤)
+Could not load host key: /etc/ssh_host_rsa_key
+Could not load host key: /etc/ssh_host_dsa_key
+Disabling protocol version 2. Could not load host key
+sshd: no hostkeys available -- exiting.
+ 
+
+11.建立ssh_host_ecdsa_key
+ssh-keygen -t ecdsa -f /etc/ssh_host_ecdsa_key -N ''
+(如果沒有會出現Could not load host key: /etc/ssh_host_ecdsa_key)
+
+12修改屬性
+chmod 0600 /etc/ssh_host_*
+(如果沒有修改會產生下列錯誤)
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0777 for '/etc/ssh_host_rsa_key' are too open.
+It is recommended that your private key files are NOT accessible by others.
+This private key will be ignored.
+bad permissions: ignore key: /etc/ssh_host_rsa_key
+Could not load host key: /etc/ssh_host_rsa_key
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0777 for '/etc/ssh_host_dsa_key' are too open.
+It is recommended that your private key files are NOT accessible by others.
+This private key will be ignored.
+bad permissions: ignore key: /etc/ssh_host_dsa_key
+Could not load host key: /etc/ssh_host_dsa_key
+Disabling protocol version 2. Could not load host key
+sshd: no hostkeys available -- exiting.
+
+13修改./etc/sshd_config (注意不是ssh_config)
+PermitRootLogin yes #允許root登入
+PermitEmptyPasswords yes #允許密碼是空的
+PasswordAuthentication yes # 是否使用驗證
+(參考http://www.wretch.cc/blog/awaysu/24756547 ,原本在板子上就已設定成免密碼)
+
+14.執行/sbin/sshd
+
+15.確認是否執行
+ps | grep sshd
+2802 root      2196 S    /sbin/sshd
+
+netstat -tnlp | grep :22
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      799/sshd
+
+
+16. 利用pietty登入確認是否成功
+
+
+參考:
+http://bbs.ghtt.net/thread-111403-1-1.html
+http://packages.debian.org/zh-cn/source/sid/libcrypto++
+http://gcc.gnu.org/ml/gcc-help/2003-09/msg00276.html
+http://lamp.linux.gov.cn/Linux/LFS-6.2/chapter06/zlib.html
+http://www.unixguide.net/comments/sun/ssh_installation.shtml/37.shtml
+http://linux.vbird.org/linux_server/0310telnetssh.php#ssh_sshdconfig
+http://hi.baidu.com/leaffar/blog/item/f84cba1e8697051840341777.html
+http://blog.chinaunix.net/u2/70922/showart_733272.html
+
+
+
+#====================================================================
+#  Auto configure
+
+一般source code都會有Makefile然後我們直接去修改.
+但是含有./configure的步驟不是這樣,以下是參考bash
+
+[root@linux bash-3.2]# CC=mipsel-linux-gcc CXX=mipsel-linux-g++ LD=mipsel-linux-ld AR=mipsel-linux-ar AS=mipsel-linux-as RANLIB=mipsel-linux-ranlib NM=mipsel-linux-nm STRIP=mipsel-linux-strip CFLAGS="-mabi=32 -DL_ENDIAN -DTERMIO -O3 -g -Wall" host_os=linux-gnu host=mipsel-mips-linux-gnu ./configure --target=mipsel-unknown-linux-gnu --host=mipsel-unknown-linux-gnu --build=i686-pc-linux-gnu --prefix=
+
+[root@linux bash-3.2]#vi Makefile
+修改DESTDIR = ./_install
+(一定要修改,否則會蓋到原本的x86 的bash)
+
+[root@linux bash-3.2]#make
+[root@linux bash-3.2]#make install
+
+
+
+#====================================================================
+# 建立基本可開機的filesystem
+
+1. 建立一個工作目錄nfs_root_work
+
+2. 用vi建立一個mkroot.sh,並將下列複製到mkroot.sh裡存檔
+echo "creatint rootfs dir......"
+mkdir rootfs
+cd rootfs
+
+echo "making dir : bin dev etc lib proc sbin sys usr"
+mkdir bin dev etc lib proc sbin sys usr
+
+# Don't use mknod ,unless you run this Script as root !
+# mknod -m 600 dev/console c 5 1
+# mknod -m 666 dev/null c 1 3
+echo "making dir : mnt tmp var"
+mkdir mnt tmp var
+chmod 1777 tmp
+mkdir mnt/etc mnt/jffs2 mnt/yaffs mnt/data mnt/temp
+mkdir var/lib var/lock var/log var/run var/tmp
+chmod 1777 var/tmp
+
+echo "making dir : home root boot"
+mkdir home root boot
+
+cd dev
+mknod -m 600 console c 5 1;mknod -m 666 null c 1 3
+cd ..
+cd ..
+#=====================================================
+echo "copy files from busybox ..."
+cp -af busybox-1.12.1/_install/* rootfs/
+cp -af busybox-1.12.1/examples/bootfloppy/etc rootfs
+#=====================================================
+echo "copy files from etc ..."
+cp -af etc/* rootfs/etc
+#=====================================================
+echo "copy files from lib ..."
+cp -af lib/* rootfs/lib
+#=====================================================
+#echo "modify login file form TinyLogin ..."
+#cd tinylogin-1.4
+#make PREFIX=../rootfs/ install
+#cd ..
+echo "filesystem make finish!"
+
+
+3. 建立lib目錄,並把需要的library拷貝到該目錄裡
+
+4. 建立etc目錄,並建立以下內容檔案
+
+etc/fstab
+proc /proc proc defaults 0 0
+none /tmp ramfs defaults 0 0
+mdev /dev ramfs defaults 0 0
+sysfs /sys sysfs defaults 0 0
+
+etc/inittab
+::sysinit:/etc/init.d/rcS
+::respawn:/bin/login root
+::restart:/sbin/init
+::ctrlaltdel:/sbin/reboot
+::shutdown:/bin/umount -a -r
+::shutdown:/sbin/swapoff -a
+
+etc/profile
+# /etc/profile: system-wide .profile file for the Bourne shells
+echo
+
+echo "Processing /etc/profile... "
+# no-op
+
+
+# Set search library path
+echo "Set search library path in /etc/profile"
+export LD_LIBRARY_PATH=/lib:/usr/lib
+
+# Set user path
+echo "Set user path in /etc/profile"
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+# Set PS1
+#注意：ash 除了SHELL變量外，支持\u、\h、\W、\$、\!、\n、\w 、\nnn（ASCII字符對應的八進制數）
+#以及\e[xx;xxm (彩色特效)等等！
+#而且前面還要多加一個 '\'！
+
+echo "Set PS1 in /etc/profile"
+
+export PS1="[$USER@Comtrend]#"
+
+echo "Done"
+
+echo
+
+etc/passwd
+root:x:0:0:root:/root:/bin/sh
+
+etc/group
+root:x:0:root
+
+etc/shadow
+root::13888:0:99999:7:::
+
+etc/mdev.conf
+(要有檔案但內容是空的)
+
+在etc中建立init.d目錄
+etc/init.d/rcS
+#! /bin/sh
+echo "----------mount all"
+/bin/mount -a
+
+echo "----------Starting mdev......"
+#/bin/echo /sbin/mdev > /proc/sys/kernel/hotplug
+mdev -s
+
+echo "*********************************************************"
+echo " Rootfs 2008/10/15"
+echo " Love Linux ! ! ~Awaysu~ "
+echo "********************************************************"
+
+5. 下載busybox並解壓縮, http://www.busybox.net/downloads/
+(注意版本名稱,mkroot.sh需相同)
+
+6. 進入busybox目錄,使用vi修改Makefile
+ARCH = mips
+CROSS_COMPILE = mipsel-uclibc-
+
+7. 執行make menuconfig
+Mscellaneous Utilities
+[ ] readahead
+[ ] taskset
+
+Linux System Utilities
+[*] Support mounting NFS file systems
+
+Networking Utilities
+[ ] ether-wake
+[*] Support RPC services
+
+Linux Module Utilities
+[ ] Simplified modutils
+後面全都要勾
+
+Miscellaneous Utilities
+[ ] inotifyd
+
+8. 建立busybox-1.12.1/arch/mips/Makefile
+CFLAGS += -mips32 -mtune=mips32
+ 
+9. 執行make,執行完後再執行make install,完成後會產生_install目錄,請刪除目錄裡的linuxrc檔案.
+ 
+10. 完成後回到nfs_root_work執行mkroot.sh就會自動幫你建好filesystem.
+ 
+11.拷貝lib檔案,一定要有
+ld-uClibc-0.9.29.so
+libm-0.9.29.so
+libuClibc-0.9.29.so
+
+以上我已經包成一個壓縮檔(下載),解開後執行到busybox目錄執行完後再執行make install,會到工作目錄執行make就會產生filesystem到rootfs,再用NFS作為filesystem root執行.
+在Bootloader下執行
+setenv -p STARTUP "boot -z -elf flash0.kernel1: 'rootfstype=nfs root=/dev/nfs nfsroot=192.168.168.201:/home/awaysu/rootfs_work/rootfs ip=192.168.168.174 mem=128M'"
+
+
+reference:
+http://ccoolloorr.blogspot.com/2008/05/filesystem.html
+http://wiki.jk2410.org/wiki/%E5%8A%A0%E5%85%A5Busybox
+
+#====================================================================
+# 使用NFS作為filesystem root(rootfs)
+
+在一般情形filesystem是存放在flash讀到ram
+setenv -p STARTUP "boot -z -elf flash0.kernel1: 'rootfstype=jffs2
+root=/dev/mtdblock4 rw ip=off mem=128M'"
+
+但是debug時會很麻煩,更改後又要重燒flash,所以可以利用mount將filesystem從nfs讀到ram
+setenv -p STARTUP "boot -z -elf flash0.kernel1: 'rootfstype=nfs root=/dev/nfs
+nfsroot=192.168.168.145:/opt/brcm/7401_nfs_root ip=192.168.168.174 mem=128M'"
+(192.168.168.145是nfs server, 192.168.168.174是版子IP)
+
+setenv -p STARTUP "ifconfig eth0 -auto"
+boot -z -elf 192.168.168.201:awaysu/vmlinuz_ct_smp 'rootfstype=nfs root=/dev/nfs nfsroot=192.168.168.201:/home/jim/nfs_root/7405b0_4_0 ip=192.168.168.174 mem=128M'"
+
+#====================================================================
+VLC auto command
+taskkill /F /IM vlc.exe
+start "Channel 01" "C:\Program Files\VideoLAN\VLC\vlc.exe" "C:\Program Files\Apache Software Foundation\Apache2.2\htdocs\boa.ts" --sout=#udp{dst=225.1.1.29:30120} --no-sout-rtp-sap --no-sout-standard-sap --sout-all --ttl=1 --sout-keep --loop --repeat
+
+#====================================================================
+
+ntp:
+/usr/sbin/ntpdate -f 28800 -u -s 220.130.158.5
+/usr/sbin/ntpdate -f 28800 -u -s time.stdtime.gov.tw
+
+route :
+route delete 0.0.0.0
+route add 0.0.0.0 MASK 0.0.0.0 192.168.168.254
+route add 172.16.0.0 MASK 255.255.255.0 172.16.33.1
+route add 225.1.1.0 MASK 255.255.255.0 172.16.33.1
+exit
+
+
+
+
+
+
+
+
+

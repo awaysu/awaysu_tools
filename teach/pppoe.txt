@@ -1,0 +1,24 @@
+1.downlaod
+ppp 2.4.4
+http://ppp.samba.org/ppp/
+
+rp-pppoe-3.10.tar.gz
+http://www.roaringpenguin.com/products/pppoe
+
+2.Kernel
+CONFIG_PPP=y
+CONFIG_PPP_MULTILINK=y
+CONFIG_PPP_FILTER=y
+CONFIG_PPP_ASYNC=y
+CONFIG_PPP_SYNC_TTY=y
+CONFIG_PPP_DEFLATE=y
+CONFIG_PPP_BSDCOMP=y
+CONFIG_PPP_MPPE=y
+CONFIG_PPPOE=y
+CONFIG_N_HDLC=y
+CONFIG_UNIX98_PTYS=y
+
+3.Refer:
+http://tldp.org/HOWTO/PPP-HOWTO/kernel-configuration.html#AEN609
+http://rsc.anu.edu.au/General/linux_ppp/ANU-PPP-HOWTO-4.html
+http://www.gentoo.org/doc/zh_tw/handbook/handbook-ppc64.xml?part=1&chap=7
