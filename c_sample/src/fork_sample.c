@@ -62,7 +62,7 @@ int fork_sample2()
     return 0;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	printf("fork_sample1\n");
@@ -72,4 +72,3 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */

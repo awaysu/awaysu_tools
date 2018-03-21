@@ -18,7 +18,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ctype.h>
-#include "sample.h"
+
 
 
 #define SET_H_ERRNO(err) ((void)(h_errno = (err)))
@@ -103,7 +103,7 @@ char *print_address(const ip_address *addr)
 int run_with_timeout (double timeout, void (*fun) (void *), void *arg)
 {
 	fun (arg);
-	return FALSE;
+	return -1;
 }
 
 static struct address_list *address_list_from_addrinfo (const struct addrinfo *ai)
@@ -177,7 +177,7 @@ double timeout)
 
 static int is_valid_ipv4_address (const char *str, const char *end)
 {
-	int saw_digit = FALSE;
+	int saw_digit = -1;
 	int octets = 0;
 	int val = 0;
 
@@ -190,28 +190,28 @@ static int is_valid_ipv4_address (const char *str, const char *end)
 			val = val * 10 + (ch - '0');
 
 			if (val > 255)
-			return FALSE;
+			return -1;
 			if (!saw_digit)
 			{
 				if (++octets > 4)
-				return FALSE;
-				saw_digit = TRUE;
+				return -1;
+				saw_digit = 0;
 			}
 		}
 		else if (ch == '.' && saw_digit)
 		{
 			if (octets == 4)
-				return FALSE;
+				return -1;
 			val = 0;
-			saw_digit = FALSE;
+			saw_digit = -1;
 		}
 		else
-			return FALSE;
+			return -1;
 	}
 	if (octets < 4)
-		return FALSE;
+		return -1;
 
-	return TRUE;
+	return 0;
 }
 
 int is_valid_ipv6_address (const char *str, const char *end)
@@ -233,18 +233,18 @@ int is_valid_ipv6_address (const char *str, const char *end)
 	colonp = NULL;
 
 	if (str == end)
-		return FALSE;
+		return -1;
 
 	/* Leading :: requires some special handling. */
 	if (*str == ':')
 	{
 		++str;
 		if (str == end || *str != ':')
-		return FALSE;
+		return -1;
 	}
 
 	curtok = str;
-	saw_xdigit = FALSE;
+	saw_xdigit = -1;
 	val = 0;
 
 	while (str < end)
@@ -257,8 +257,8 @@ int is_valid_ipv6_address (const char *str, const char *end)
 			val <<= 4;
 			val |= XDIGIT_TO_NUM (ch);
 			if (val > 0xffff)
-				return FALSE;
-			saw_xdigit = TRUE;
+				return -1;
+			saw_xdigit = 0;
 			continue;
 		}
 
@@ -269,16 +269,16 @@ int is_valid_ipv6_address (const char *str, const char *end)
 			if (!saw_xdigit)
 			{
 				if (colonp != NULL)
-					return FALSE;
+					return -1;
 				colonp = str + tp;
 				continue;
 			}
 			else if (str == end)
-				return FALSE;
+				return -1;
 			if (tp > ns_in6addrsz - ns_int16sz)
-				return FALSE;
+				return -1;
 			tp += ns_int16sz;
-			saw_xdigit = FALSE;
+			saw_xdigit = -1;
 			val = 0;
 			continue;
 		}
@@ -288,47 +288,47 @@ int is_valid_ipv6_address (const char *str, const char *end)
 		&& is_valid_ipv4_address (curtok, end) == 1)
 		{
 			tp += ns_inaddrsz;
-			saw_xdigit = FALSE;
+			saw_xdigit = -1;
 			break;
 		}
 
-		return FALSE;
+		return -1;
 	}
 
 	if (saw_xdigit)
 	{
 		if (tp > ns_in6addrsz - ns_int16sz)
-		return FALSE;
+		return -1;
 		tp += ns_int16sz;
 	}
 
 	if (colonp != NULL)
 	{
 		if (tp == ns_in6addrsz)
-		return FALSE;
+		return -1;
 		tp = ns_in6addrsz;
 	}
 
 	if (tp != ns_in6addrsz)
-		return FALSE;
+		return -1;
 
-	return TRUE;
+	return 0;
 }
 
 int get_host_ip(char *host, char *ip)
 {
-	int bRet = FALSE;
+	int bRet = -1;
 	struct addrinfo hints, *res;
 	struct address_list *al;
 	double timeout = 0;
 	int flags = 0;
 	int silent = !!(flags & LH_SILENT);
-	int numeric_address = FALSE;
+	int numeric_address = -1;
 	int err;
 
 	const char *end = host + strlen (host);
 	if (is_valid_ipv4_address (host, end) || is_valid_ipv6_address (host, end))
-		numeric_address = TRUE;
+		numeric_address = 0;
 
 	xzero (hints);
 	hints.ai_socktype = SOCK_STREAM;
@@ -350,7 +350,7 @@ int get_host_ip(char *host, char *ip)
 		char *pTmp = print_address (al->addresses);
 		//printf("pTmp : %s\n", pTmp);
 		strcpy(ip, pTmp);
-		bRet = TRUE;
+		bRet = 0;
 	}
 
 GET_HOST_IP_ERROR:
@@ -361,7 +361,7 @@ GET_HOST_IP_ERROR:
 	return bRet;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	char pTmp[100];
@@ -369,5 +369,5 @@ int main(int argc, char *argv[])
 	printf("google ip : %s\n", pTmp);
 	return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

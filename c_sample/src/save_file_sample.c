@@ -5,19 +5,19 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include "sample.h"
+
 
 	   
-BOOL save_file(char *pFile, char *pBuf, unsigned int length)
+int save_file(char *pFile, char *pBuf, unsigned int length)
 {
     int    fd = 0;
-    int    retValue = FALSE;
+    int    retValue = -1;
 	
     if ( (fd = open( pFile, 
     	      O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) > 0 )
     {
 		if ( write(fd, pBuf, length) == length )
-			retValue = TRUE;
+			retValue = 0;
 		else		
 			printf("%s write to file %s fail\n", __FUNCTION__, pFile );	
 			
@@ -30,7 +30,7 @@ BOOL save_file(char *pFile, char *pBuf, unsigned int length)
     return retValue;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
     char save[] = "abcde\n12345\n";
@@ -39,4 +39,3 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */

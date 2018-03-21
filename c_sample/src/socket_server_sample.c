@@ -8,7 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <time.h> 
-#include "sample.h"
+
 
 int socket_server(int port)
 {
@@ -53,7 +53,7 @@ int socket_server(int port)
 	return 0;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 
@@ -61,5 +61,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

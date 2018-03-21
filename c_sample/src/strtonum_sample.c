@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include <stdlib.h>
 #include <string.h>
-#include "sample.h"
+
 
 int strtonum(char *pInput)
 {
@@ -20,7 +20,7 @@ int strtonum(char *pInput)
 }
 
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	char val[] = "0x30";
@@ -29,5 +29,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

@@ -5,7 +5,7 @@
 
 extern int errno;
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
     strtol("0xfffffffff",NULL,0);
@@ -13,5 +13,5 @@ int main(int argc, char *argv[])
     printf("error : %d, %s\n", errno, err_str);
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

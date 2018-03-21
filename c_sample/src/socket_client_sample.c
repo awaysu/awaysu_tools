@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <arpa/inet.h> 
-#include "sample.h"
+
 
 int socket_client(char *ip, int port)
 {
@@ -65,7 +65,7 @@ int socket_client(char *ip, int port)
     return 0;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 
@@ -73,5 +73,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

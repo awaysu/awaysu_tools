@@ -1,28 +1,28 @@
 #include "stdio.h"
 #include <stdlib.h>
-#include "sample.h"
 
+#define MAX_SHORT_LENGTH        128
 
-BOOL check_program(char *exe_name)
+int check_program(char *exe_name)
 {
-    int bRet = FALSE;
+    int bRet = -1;
     char command[MAX_SHORT_LENGTH];
     
     sprintf(command, "ps | grep %s | grep -v grep > /dev/null", exe_name);
     if (system(command) == 0)
-        bRet = TRUE;
+        bRet = 0;
         
     return bRet; 
 }
 
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
-	BOOL ret = check_program("bash");
-	printf("bash is %s\n", ret==TRUE?"running!":"not running!");	
+	int ret = check_program("bash");
+	printf("bash is %s\n", ret==0?"running!":"not running!");	
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

@@ -26,7 +26,7 @@ The code is form http://isec.pl/vulnerabilities/isec-0018-igmp.txt. It's fail wh
 #include "stdio.h"
 #include "string.h"
 #include <stdlib.h>
-#include "sample.h"
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -54,7 +54,7 @@ void fatal (const char *message)
     exit (1);
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
     int s, r, l;
@@ -95,5 +95,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

@@ -1,36 +1,36 @@
 #include "stdio.h"
 #include <unistd.h>
-#include "sample.h"
 
-BOOL is_file_exist(char *pFile)
+
+int is_file_exist(char *pFile)
 {
-	int bRet = FALSE;
+	int bRet = -1;
 	FILE* fp = fopen(pFile, "r");
 	if (fp) 
 	{
-	    bRet = TRUE;
+	    bRet = 0;
 	    fclose(fp);
 	}
 	return bRet;
 }
 
-BOOL is_folder_exist(char *pFolder)
+int is_folder_exist(char *pFolder)
 {
-	BOOL bRet = FALSE;
+	int bRet = -1;
     int ret = chdir(pFolder);
 	if (ret == 0)
-		bRet = TRUE;
+		bRet = 0;
 	return bRet;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
-	BOOL ret = is_file_exist("/etc/exports");
-    printf("/etc/exports : %s\n", ret==TRUE?"Exist":"Not Exist");
+	int ret = is_file_exist("/etc/exports");
+    printf("/etc/exports : %s\n", ret==0?"Exist":"Not Exist");
 	
 	ret = is_folder_exist("/etc/");
-    printf("/etc/ : %s\n", ret==TRUE?"Exist":"Not Exist");	
+    printf("/etc/ : %s\n", ret==0?"Exist":"Not Exist");	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+

@@ -1,8 +1,8 @@
 #include "stdio.h"
 #include <sys/sysinfo.h>
-#include "sample.h"
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
+
 int main(int argc, char *argv[])
 {
 	struct sysinfo sys_info;
@@ -15,5 +15,5 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

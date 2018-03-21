@@ -5,11 +5,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "sample.h"
 
-BOOL copyfile(char *src, char *dest)
+#define MAX_LONG_LENGTH			1024
+
+int copyfile(char *src, char *dest)
 {
-	int  ret = TRUE;
+	int  ret = 0;
     int  nLen = 0;;
     char pBuf[MAX_LONG_LENGTH];
 
@@ -21,7 +22,7 @@ BOOL copyfile(char *src, char *dest)
         if (write(fd2, pBuf, nLen) != nLen)
         {
             printf("%s write to file %s fail\n", __FUNCTION__, dest );	
-			ret = FALSE;
+			ret = -1;
 			break;
         }
     }
@@ -32,11 +33,11 @@ BOOL copyfile(char *src, char *dest)
     return ret;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
     copyfile("/etc/exports", "./exports");
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

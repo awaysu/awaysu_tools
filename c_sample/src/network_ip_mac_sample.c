@@ -6,12 +6,12 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-#include "sample.h"
 
+#define MAX_SHORT_LENGTH        128
 
 int get_mac_address(char *name, char *mac)
 {
-	int ret = FALSE;
+	int ret = -1;
 	struct ifreq s;
 	int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
@@ -25,16 +25,16 @@ int get_mac_address(char *name, char *mac)
 		(unsigned char) s.ifr_addr.sa_data[3],
 		(unsigned char) s.ifr_addr.sa_data[4],
 		(unsigned char) s.ifr_addr.sa_data[5]);
-		ret = TRUE;
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 
 int get_ip_address(char *name, char *ip)
 {
 	int fd;
-	int ret = FALSE;
+	int ret = -1;
 	struct ifreq ifr;
 	
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -45,13 +45,13 @@ int get_ip_address(char *name, char *ip)
 		ioctl(fd, SIOCGIFADDR, &ifr);
 		strcpy(ip, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 		close(fd);
-		ret = TRUE;
+		ret = 0;
 	}
 	
 	return ret;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	char ip[MAX_SHORT_LENGTH];
@@ -64,5 +64,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

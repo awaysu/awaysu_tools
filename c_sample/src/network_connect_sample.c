@@ -44,11 +44,11 @@ int get_netlink_status(const char *if_name)
 }
 
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	printf("eth0 : %s\n", get_netlink_status("eth0")==1?"up":"down");
 	return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

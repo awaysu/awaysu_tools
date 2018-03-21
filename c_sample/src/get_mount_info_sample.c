@@ -6,10 +6,19 @@
 #include <unistd.h>
 #include <string.h>
 #include <mntent.h>
-#include "sample.h"
 
-#ifndef MAKE_LIBRARY_SAMPLE
-BOOL load_file(char *pFile, char **pContent)
+#define MAX_SHORT_LENGTH        128
+
+typedef struct mountInfo
+{
+    char  devName[MAX_SHORT_LENGTH];
+    char  mountPath[MAX_SHORT_LENGTH];
+    char  fsType[MAX_SHORT_LENGTH];
+	char  attribute[MAX_SHORT_LENGTH];
+    struct mountInfo *next; 
+} mountInfoS;
+
+int load_file(char *pFile, char **pContent)
 {
     int nTotalLen = 0, readLen;
     int fd;
@@ -17,8 +26,8 @@ BOOL load_file(char *pFile, char **pContent)
     
     if ( (fd = open((char *)pFile, O_RDONLY)) < 0 )
     {
-        printf("Open File %s FALSE %d\n", pFile, strlen((char *)pFile));
-        return FALSE;
+        printf("Open File %s -1 %d\n", pFile, (int)strlen((char *)pFile));
+        return -1;
     }
 
     nTotalLen = 0;
@@ -28,13 +37,13 @@ BOOL load_file(char *pFile, char **pContent)
     if (nTotalLen <= 0)
     {
         printf("%s the file length is %d\n", __FUNCTION__, nTotalLen);
-        return FALSE;
+        return -1;
     }        
 
     if (lseek(fd, 0, SEEK_SET) == -1)
     {
         printf("%s can't seek file\n", __FUNCTION__);
-        return FALSE;
+        return -1;
     }
 
     // alloc memory
@@ -43,15 +52,15 @@ BOOL load_file(char *pFile, char **pContent)
     if(read(fd, *pContent, nTotalLen) < 0)
     {
         free(*pContent);
-        return FALSE;
+        return -1;
     }
     
     *(*pContent + nTotalLen ) = '\0';
     
     close(fd);
-    return TRUE;    
+    return 0;    
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 
 void getMountInfo(mountInfoS **pOutput)
 {
@@ -67,7 +76,7 @@ void getMountInfo(mountInfoS **pOutput)
 
 	pNew = pFirst = pCur = NULL;
 	
-	if (load_file("/proc/mounts", &pContent) == TRUE)
+	if (load_file("/proc/mounts", &pContent) == 0)
 	{
 		pTmp = pContent;
 
@@ -136,7 +145,7 @@ void freeMountInfo(mountInfoS *pIntput)
     }
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	mountInfoS *minfo = NULL;
@@ -161,5 +170,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

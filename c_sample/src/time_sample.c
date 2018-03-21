@@ -1,11 +1,12 @@
 #include "stdio.h"
 #include <time.h>
 #include <string.h>
-#include "sample.h"
+
+#define MAX_SHORT_LENGTH        128
 
 void get_time(char *pTime)
 {
-	memset(pTime, '\0', sizeof(pTime));
+	memset(pTime, '\0', MAX_SHORT_LENGTH);
 	struct tm *tm_ptr;
 	time_t the_time;
 	time(&the_time);
@@ -15,7 +16,7 @@ void get_time(char *pTime)
 		tm_ptr->tm_hour, tm_ptr->tm_min, tm_ptr->tm_sec);		
 }
                                                            
-BOOL set_time(char *buffertime)                             
+int set_time(char *buffertime)                             
 {
 	struct tm tm_per;
 	time_t time1; 
@@ -24,7 +25,7 @@ BOOL set_time(char *buffertime)
 
 	len = strlen(buffertime);
 	if(strlen(buffertime) != 19){
-		return FALSE;
+		return -1;
 	}
 	
 	flag = sscanf(buffertime,"%d:%d:%d,%d:%d:%d", &year, &month, &day, &hour, &min, &sec);
@@ -49,7 +50,7 @@ BOOL set_time(char *buffertime)
 	 	flag = -1;
 	
 	if(flag < 0){
-		return FALSE;
+		return -1;
 	}
 	
 	tm_per.tm_year 	= year-1900;
@@ -63,17 +64,17 @@ BOOL set_time(char *buffertime)
 	printf("mktime=%ld\n",time1);
 	if(time1 > 0){
 		if(stime(&time1)==0){
-			return TRUE;
+			return 0;
 		}else{
-			return FALSE;
+			return -1;
 		}
 	}else{
-		return FALSE;
+		return -1;
 	}
 }      
 
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	char pTime[MAX_SHORT_LENGTH];
@@ -83,5 +84,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

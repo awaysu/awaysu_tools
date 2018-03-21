@@ -16,7 +16,22 @@
 #include <linux/fs.h>
 #include <dirent.h>
 #include <string.h>
-#include "sample.h"
+
+#define MAX_SHORT_LENGTH        128
+
+typedef enum FILEFOLDER_TYPE
+{
+    ATTRIBUTE_FILE,
+    ATTRIBUTE_FOLDER,
+}FILEFOLDER_TYPE_ENUM;
+
+typedef struct filefolderInfo
+{
+    char                        pathname[MAX_SHORT_LENGTH*2];
+    char                        name[MAX_SHORT_LENGTH*2];
+    FILEFOLDER_TYPE_ENUM   	    type;
+    struct filefolderInfo *next;
+}filefolderInfoS;
 
 int get_file_list(char *path, filefolderInfoS **arcfolderlist)
 {
@@ -27,7 +42,7 @@ int get_file_list(char *path, filefolderInfoS **arcfolderlist)
 
     dir =opendir(path);
     if (dir == NULL)
-        return TRUE;
+        return 0;
 
     while((ptr = readdir(dir))!=NULL) 
     {
@@ -75,7 +90,7 @@ int get_file_list(char *path, filefolderInfoS **arcfolderlist)
     
     *arcfolderlist = first;
     
-    return TRUE;
+    return 0;
 
 }
 
@@ -108,7 +123,7 @@ void easy_sample()
 }
 
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	filefolderInfoS *pInfo = NULL;
@@ -131,5 +146,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

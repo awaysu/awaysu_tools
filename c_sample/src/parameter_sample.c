@@ -1,12 +1,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#ifndef MAKE_LIBRARY_SAMPLE
-
 void process_options(int argc, char *argv[])
 {
     int oc; 
-    char *b_opt_arg;
 
     while((oc = getopt(argc, argv, "ngl:")) != -1)
     {
@@ -19,7 +16,6 @@ void process_options(int argc, char *argv[])
                 printf("Her name is Xxiong.\n");
                 break;
             case 'l':
-                b_opt_arg = optarg;
                 printf("Our love is %s\n", optarg);
                 break;
             default:
@@ -35,5 +31,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

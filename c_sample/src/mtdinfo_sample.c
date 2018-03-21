@@ -1,7 +1,17 @@
 #include "stdio.h"
 #include <stdlib.h>
 #include <string.h>
-#include "sample.h"
+
+#define MAX_SHORT_LENGTH        128
+
+typedef struct strProcMtd
+{
+    int                  index;
+    int                  size;    
+    char                 name[MAX_SHORT_LENGTH];
+    char                 devname[MAX_SHORT_LENGTH];
+    struct strProcMtd *next;
+}strProcMtdS;
 
 void free_mtd_info(strProcMtdS *pInArgu)
 {
@@ -92,7 +102,7 @@ void get_mtd_info(strProcMtdS  **pOutput)
     }
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	strProcMtdS *mtdinfo = NULL;
@@ -117,5 +127,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

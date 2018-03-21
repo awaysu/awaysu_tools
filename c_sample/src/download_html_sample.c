@@ -142,7 +142,7 @@ int get_http_code(char *host, char *page, int port, char **code)
     return 0;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	char *pTmp = NULL;
@@ -156,5 +156,5 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

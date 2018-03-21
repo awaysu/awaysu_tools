@@ -5,10 +5,17 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include "sample.h"
 
-#ifndef MAKE_LIBRARY_SAMPLE
-BOOL load_file(char *pFile, char **pContent)
+#define MAX_SHORT_LENGTH        128
+
+typedef struct ConfigParam
+{
+    char   argument[MAX_SHORT_LENGTH];
+    char   option[MAX_SHORT_LENGTH];
+    struct ConfigParam *next; 
+}ConfigParamS;
+
+int load_file(char *pFile, char **pContent)
 {
     int nTotalLen = 0, readLen;
     int fd;
@@ -16,8 +23,8 @@ BOOL load_file(char *pFile, char **pContent)
     
     if ( (fd = open((char *)pFile, O_RDONLY)) < 0 )
     {
-        printf("Open File %s FALSE %d\n", pFile, fd);
-        return FALSE;
+        printf("Open File %s -1 %d\n", pFile, fd);
+        return -1;
     }
 
     nTotalLen = 0;
@@ -27,13 +34,13 @@ BOOL load_file(char *pFile, char **pContent)
     if (nTotalLen <= 0)
     {
         printf("%s the file length is %d\n", __FUNCTION__, nTotalLen);
-        return FALSE;
+        return -1;
     }        
 
     if (lseek(fd, 0, SEEK_SET) == -1)
     {
         printf("%s can't seek file\n", __FUNCTION__);
-        return FALSE;
+        return -1;
     }
 
     // alloc memory
@@ -42,25 +49,25 @@ BOOL load_file(char *pFile, char **pContent)
     if(read(fd, *pContent, nTotalLen) < 0)
     {
         free(*pContent);
-        return FALSE;
+        return -1;
     }
     
     *(*pContent + nTotalLen ) = '\0';
     
     close(fd);
-    return TRUE;    
+    return 0;    
 }
 
-BOOL save_file(char *pFile, char *pBuf, unsigned int length)
+int save_file(char *pFile, char *pBuf, unsigned int length)
 {
     int    fd = 0;
-    int    retValue = FALSE;
+    int    retValue = -1;
 	
     if ( (fd = open( pFile, 
     	      O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) > 0 )
     {
 		if ( write(fd, pBuf, length) == length )
-			retValue = TRUE;
+			retValue = 0;
 		else		
 			printf("%s write to file %s fail\n", __FUNCTION__, pFile );	
 			
@@ -72,7 +79,7 @@ BOOL save_file(char *pFile, char *pBuf, unsigned int length)
     
     return retValue;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 
 void make_param_default_value(ConfigParamS **pArgu)
 {
@@ -138,10 +145,10 @@ void free_param_option(ConfigParamS *pInArgu)
 	}
 }
 
-BOOL set_config_value(char *file, char *pArgument, char *pOption)
+int set_config_value(char *file, char *pArgument, char *pOption)
 {
     char pWrite[2048];
-    int ret = FALSE;
+    int ret = -1;
     char *pBuf = NULL;
     ConfigParamS *pOutArgu = NULL;
     ConfigParamS *pTmp = NULL;
@@ -161,7 +168,7 @@ BOOL set_config_value(char *file, char *pArgument, char *pOption)
             {
                 if (strcmp(pTmp->argument, pArgument) ==0)
                 {
-                    ret = TRUE;
+                    ret = 0;
                     strcpy(pTmp->option, pOption);
                     break;
                 }
@@ -169,7 +176,7 @@ BOOL set_config_value(char *file, char *pArgument, char *pOption)
                 pTmp = pTmp->next;
             }
             
-            if (ret == FALSE)
+            if (ret == -1)
             {
                 ConfigParamS *pNew = malloc(sizeof(ConfigParamS));
                 memset(pNew->argument, '\0', sizeof(pNew->argument));
@@ -204,13 +211,13 @@ BOOL set_config_value(char *file, char *pArgument, char *pOption)
         save_file(file, pWrite, strlen(pWrite));
     }
     
-    return TRUE;
+    return 0;
     
 }
 
 int get_config_value(char *file, char *pArgument, char *pOption)
 {
-    int ret = FALSE;
+    int ret = -1;
     char *pBuf = NULL;
     ConfigParamS *pOutArgu = NULL;
     ConfigParamS *pTmp = NULL;
@@ -228,7 +235,7 @@ int get_config_value(char *file, char *pArgument, char *pOption)
             {
                 if (strcmp(pTmp->argument, pArgument) ==0)
                 {
-                    ret = TRUE;
+                    ret = 0;
                     strcpy(pOption, pTmp->option);
                     break;
                 }
@@ -244,7 +251,7 @@ int get_config_value(char *file, char *pArgument, char *pOption)
 }
 
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	char value[MAX_SHORT_LENGTH];
@@ -257,5 +264,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

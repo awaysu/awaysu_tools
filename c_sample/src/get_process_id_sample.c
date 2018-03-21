@@ -42,11 +42,11 @@ unsigned int get_process_id(char *app_name)
     return result;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
 	printf("smbd : id %d\n", get_process_id("smbd"));
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 

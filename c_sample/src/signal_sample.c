@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include <unistd.h>
 #include <signal.h>
-#include "sample.h"
+
 
 static int loop = 1;
 
@@ -11,7 +11,7 @@ void alarm_handler(int a)
 	loop = 0;
 }
 
-#ifndef MAKE_LIBRARY_SAMPLE
+
 int main(int argc, char *argv[])
 {
     signal(SIGALRM, alarm_handler);
@@ -23,5 +23,5 @@ int main(int argc, char *argv[])
 	
     return 0;
 }
-#endif /* MAKE_LIBRARY_SAMPLE */
+
 
